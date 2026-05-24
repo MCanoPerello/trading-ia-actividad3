@@ -388,8 +388,17 @@ with tab_compare_models:
     st.markdown("### Comparativa de los 4 modelos sobre el mismo dataset")
 
     df_comp = R['df_comp']
-    st.dataframe(df_comp.style.format("{:.3f}").background_gradient(cmap='Blues'),
-                 use_container_width=True)
+    # Construir el dataframe formateado sin background_gradient (que requiere matplotlib).
+    # Usamos column_config con ProgressColumn para una visualización elegante sin dependencias extra.
+    st.dataframe(
+        df_comp,
+        use_container_width=True,
+        column_config={
+            col: st.column_config.ProgressColumn(
+                col, format="%.3f", min_value=0.0, max_value=1.0,
+            ) for col in df_comp.columns
+        },
+    )
 
     st.plotly_chart(P.fig_models_comparison(df_comp), use_container_width=True)
 
