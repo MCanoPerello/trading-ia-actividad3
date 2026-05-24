@@ -25,7 +25,6 @@ COLOR_BG_LIGHT = '#F4F6FA'
 PLOTLY_LAYOUT = dict(
     template='plotly_white',
     font=dict(family='Inter, Helvetica, Arial, sans-serif', size=12, color='#0E1A2B'),
-    title=dict(font=dict(size=16, color='#0E1A2B')),
     paper_bgcolor='white',
     plot_bgcolor='white',
     hovermode='x unified',
@@ -43,8 +42,14 @@ def fig_price(df, train_end_date=None, title="Precio del activo"):
                                  line=dict(color=COLOR_PRIMARY, width=2)))
         fig.add_trace(go.Scatter(x=test.index, y=test['Close'], name='Test',
                                  line=dict(color=COLOR_ACCENT, width=2)))
-        fig.add_vline(x=train_end_date, line_dash='dash', line_color=COLOR_GRAY,
-                      annotation_text='Inicio test', annotation_position='top')
+        # add_vline requiere la fecha como string para evitar problemas con Timestamp
+        vline_x = pd.Timestamp(train_end_date).strftime('%Y-%m-%d')
+        fig.add_shape(type='line', x0=vline_x, x1=vline_x, xref='x',
+                      y0=0, y1=1, yref='paper',
+                      line=dict(color=COLOR_GRAY, dash='dash', width=1.5))
+        fig.add_annotation(x=vline_x, y=1, xref='x', yref='paper',
+                           text='Inicio test', showarrow=False, yshift=10,
+                           font=dict(color=COLOR_GRAY, size=11))
     else:
         fig.add_trace(go.Scatter(x=df.index, y=df['Close'], name='Precio',
                                  line=dict(color=COLOR_PRIMARY, width=2)))
@@ -191,8 +196,14 @@ def fig_assets_comparison(results_dict, initial_capital=10000):
         fig.add_trace(go.Scatter(x=data['equity'].index, y=data['equity'].values,
                                  name=asset,
                                  line=dict(color=colors.get(asset, COLOR_GRAY), width=2.5)))
-    fig.add_hline(y=initial_capital, line_dash='dot', line_color=COLOR_GRAY,
-                  annotation_text='Capital inicial')
+    # Línea horizontal del capital inicial
+    fig.add_shape(type='line', xref='paper', x0=0, x1=1,
+                  yref='y', y0=initial_capital, y1=initial_capital,
+                  line=dict(color=COLOR_GRAY, dash='dot', width=1.5))
+    fig.add_annotation(xref='paper', x=0.01, yref='y', y=initial_capital,
+                       text='Capital inicial', showarrow=False,
+                       yshift=10, xanchor='left',
+                       font=dict(color=COLOR_GRAY, size=11))
     fig.update_layout(title='Equity de la estrategia en los 3 activos',
                       xaxis_title='Fecha', yaxis_title='Valor de la cuenta (€)',
                       **PLOTLY_LAYOUT)
